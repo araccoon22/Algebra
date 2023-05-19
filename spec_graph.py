@@ -1,7 +1,7 @@
 import numpy as np
 import networkx as nx
-from matplotlib import pyplot as plt
 import scipy as sp
+from matplotlib import pyplot as plt
 
 
 def parse_adjacency_list(filepath, delims=': '):
@@ -49,7 +49,8 @@ def spectral_drawing(G, p, eps=1e-8, maxiter=5000, seed=None):
         while i < maxiter:
             i += 1
             # D-orthogonalization with respect to previous eigenvectors
-            u[k + 1] = u[k + 1] - (u[k + 1] * d @ u[0:k+1].T) / np.einsum('ij,ij->i', u[0:k+1] * d, u[0:k+1]) @ u[0:k+1]
+            u[k + 1] = u[k + 1] - (u[k + 1] * d @ u[0:k + 1].T) / np.einsum('ij,ij->i', u[0:k + 1] * d, u[0:k + 1]) @ u[
+                                                                                                                      0:k + 1]
             u_old = u[k + 1].copy()
             # Power iteration
             u[k + 1] = B @ u[k + 1]
@@ -61,30 +62,38 @@ def spectral_drawing(G, p, eps=1e-8, maxiter=5000, seed=None):
         u[k + 1] /= np.sign(u[k + 1, 0])
 
     # Creating layout for G
-    pos = nx.random_layout(G)
-    for i, node in enumerate(G.nodes):
-        pos[node] = u[1:, i]
+    # pos = nx.random_layout(G)
+    # for i, node in enumerate(G.nodes):
+    #     pos[node] = u[1:, i]
 
-    return pos, u[1:, ]
+    return u[1:, ]
 
 
-graph_id = 8
-path = 'graphs/graph' + str(graph_id) + '.txt'
-# G = parse_adjacency_list(path)
-G = parse_adjacency_matrix(path)
-pos, u = spectral_drawing(G, 3)
-# G, pos, u, pos1 = spectral_drawing('graphs/graph19217_am.txt', 3, 1e-8)
-print(np.round(u, 2))
-fig, ax = plt.subplots()
-nx.draw_networkx(G, pos=pos, ax=ax, node_size=50, linewidths=0.5)
-ax.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+def plot_spectral_drawing(G, scale=100, plot3d=False, no2d=False):
+    if plot3d:
+        p = 4
+    else:
+        p = 3
+    u = spectral_drawing(G, p) * scale
+    if not plot3d or not no2d:
+        pos = nx.random_layout(G)
+        for i, node in enumerate(G.nodes):
+            pos[node] = u[0:2, i]
+        fig, ax = plt.subplots()
+        nx.draw_networkx(G, pos=pos, ax=ax, node_size=10, with_labels=False)
+        # fig, ax = plt.subplots()
+        # nx.draw_networkx(G, pos=nx.spectral_layout(G), ax=ax, node_size=10, with_labels=False)
+    if plot3d:
+        pos1 = nx.random_layout(G)
+        for i, node in enumerate(G.nodes):
+            pos1[node] = u[:, i]
+        fig1 = plt.figure()
+        ax1 = fig1.add_subplot(111, projection="3d")
+        node_xyz = np.array([pos1[v] for v in sorted(G)])
+        edge_xyz = np.array([(pos1[u], pos1[v]) for u, v in G.edges()])
+        ax1.scatter(*node_xyz.T)
+        for vizedge in edge_xyz:
+            ax1.plot(*vizedge.T, color="tab:gray", linewidth=0.5)
 
-pos1, u1 = spectral_drawing(G, 4)
-node_xyz = np.array([pos1[v] for v in sorted(G)])
-edge_xyz = np.array([(pos1[u], pos1[v]) for u, v in G.edges()])
-fig1 = plt.figure()
-ax1 = fig1.add_subplot(111, projection="3d")
-ax1.scatter(*node_xyz.T)
-for vizedge in edge_xyz:
-    ax1.plot(*vizedge.T, color="tab:gray")
-plt.show()
+    plt.show()
+    return u
