@@ -69,18 +69,22 @@ def spectral_drawing(G, p, eps=1e-8, maxiter=5000, seed=None):
     return u[1:, ]
 
 
-def plot_spectral_drawing(G, scale=100, plot3d=False, no2d=False):
+def plot_spectral_drawing(G, plot3d=False, no2d=False, scale_to_deg=False):
     if plot3d:
         p = 4
     else:
         p = 3
-    u = spectral_drawing(G, p) * scale
+    u = spectral_drawing(G, p)
     if not plot3d or not no2d:
         pos = nx.random_layout(G)
         for i, node in enumerate(G.nodes):
             pos[node] = u[0:2, i]
         fig, ax = plt.subplots()
-        nx.draw_networkx(G, pos=pos, ax=ax, node_size=10, with_labels=False)
+        node_size = 10
+        if scale_to_deg:
+            d = dict(G.degree)
+            node_size = list(d.values())
+        nx.draw_networkx(G, pos=pos, ax=ax, with_labels=False, node_size=node_size )
         # fig, ax = plt.subplots()
         # nx.draw_networkx(G, pos=nx.spectral_layout(G), ax=ax, node_size=10, with_labels=False)
     if plot3d:

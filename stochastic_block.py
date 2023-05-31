@@ -9,9 +9,13 @@ def gen_stoch_block_graph(n, r, sizes=None, prob=None, seed=None):
     rng = np.random.default_rng(seed=seed)
 
     if prob is None:
-        prob = rng.uniform(size=(r, r)) / 10
+        # prob = rng.uniform(size=(r, r)) / 5
+        # prob = (prob + prob.T) / 2
+        # prob[np.diag_indices_from(prob)] = 0.3 + rng.uniform(size=r) / 2
+
+        prob = rng.uniform(size=(r, r)) / 2
         prob = (prob + prob.T) / 2
-        prob[np.diag_indices_from(prob)] = 0.1 + rng.uniform(size=r) / 3
+        prob[np.diag_indices_from(prob)] = rng.uniform(size=r)
     assert prob.shape == (r, r)
 
     if sizes is None:
@@ -40,22 +44,36 @@ def gen_stoch_block_graph(n, r, sizes=None, prob=None, seed=None):
 sizes = [75, 75, 300]
 probs = np.array([[0.25, 0.05, 0.02], [0.05, 0.35, 0.07], [0.02, 0.07, 0.40]])
 # G = nx.stochastic_block_model(sizes, probs, seed=0)
-# G = gen_stoch_block_graph(450, 3, sizes=np.array(sizes), prob=probs, seed=0)
+# G, p, c = gen_stoch_block_graph(450, 3, sizes=np.array(sizes), prob=probs, seed=0)
 
-r = 10
+r = 5
 G, p, c = gen_stoch_block_graph(1000, r)
 u = spectral_drawing(G, 4)
 groups = [[] for _ in range(r)]
 for node in G.nodes().items():
     groups[node[1]['block']].append(u[:, node[0]])
 
-# fig, ax = plt.subplots()
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
+fig, ax = plt.subplots()
+fig1 = plt.figure()
+ax1 = fig1.add_subplot(projection='3d')
 for i in range(r):
     g = np.array(groups[i])
-    ax.scatter(g[:, 0], g[:, 1], g[:, 2], label='Block'+str(i))
+    ax.scatter(g[:, 0], g[:, 1], label='Block' + str(i))
+    ax1.scatter(g[:, 0], g[:, 1], g[:, 2], label='Block'+str(i))
+ax1.legend()
 ax.legend()
+
+plot_spectral_drawing(G)
+# from sklearn.cluster import KMeans
+# kmeans = KMeans(n_clusters=r, random_state=0)
+# labels = kmeans.fit_predict(u.T)
+# u_labels = np.unique(labels)
+#
+# fig2, ax2 = plt.subplots()
+# for i in u_labels:
+#     ax2.scatter(u[:, labels == i][0], u[:, labels == i][1], label=i)
+# ax2.legend()
+
 plt.show()
 
 print(1)

@@ -3,7 +3,8 @@ import numpy as np
 from spec_graph import *
 
 
-def gen_ba_graph(G0, m, k):
+def gen_ba_graph(G0, m, k, seed=None):
+    rng = np.random.default_rng(seed)
     m0 = G0.number_of_nodes()
     assert m <= m0
 
@@ -15,7 +16,7 @@ def gen_ba_graph(G0, m, k):
         for j in range(m):
             successful_edge = False
             while not successful_edge:
-                connection_node = np.random.choice(old_nodes, p=node_prob)
+                connection_node = rng.choice(old_nodes, p=node_prob)
                 if not (new_node, connection_node) in G0.edges():
                     successful_edge = True
                     G0.add_edge(new_node, connection_node)
@@ -24,14 +25,16 @@ def gen_ba_graph(G0, m, k):
         deg = np.append(deg, m)
         node_prob = deg / (2 * G0.number_of_edges())
 
+    print("done")
     return G0
 
 
 m0 = 10
-G0 = nx.full_rary_tree(2, m0)
-# G0 = nx.complete_graph(m0)
+# G0 = nx.full_rary_tree(2, m0)
+G0 = nx.complete_graph(m0)
 # G0 = nx.circular_ladder_graph(m0)
-# G = nx.barabasi_albert_graph(500, 2)
-G = gen_ba_graph(G0, 2, 500)
+# G = nx.barabasi_albert_graph(10000, 5, seed=0)
+G = gen_ba_graph(G0, 2, 1000, seed=0)
 d = np.array([G0.degree(node) for node in G0.nodes()])
-plot_spectral_drawing(G, plot3d=True)
+plot_spectral_drawing(G, scale_to_deg=True)
+print(1)
